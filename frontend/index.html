@@ -1,0 +1,495 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Web3 Tor Browser App</title>
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" rel="stylesheet">
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: #333;
+            min-height: 100vh;
+            display: flex;
+            flex-direction: column;
+        }
+
+        header {
+            background: rgba(255, 255, 255, 0.1);
+            backdrop-filter: blur(10px);
+            padding: 1rem 2rem;
+            border-bottom: 1px solid rgba(255, 255, 255, 0.2);
+        }
+
+        .header-content {
+            max-width: 1200px;
+            margin: 0 auto;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .logo {
+            font-size: 1.5rem;
+            font-weight: bold;
+            color: white;
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+        }
+
+        .main-container {
+            flex: 1;
+            max-width: 1200px;
+            margin: 2rem auto;
+            padding: 0 2rem;
+            width: 100%;
+        }
+
+        .welcome-section {
+            background: rgba(255, 255, 255, 0.95);
+            border-radius: 20px;
+            padding: 2rem;
+            margin-bottom: 2rem;
+            box-shadow: 0 10px 30px rgba(0, 0, 0, 0.1);
+        }
+
+        .welcome-title {
+            font-size: 2.5rem;
+            margin-bottom: 1rem;
+            color: #333;
+            text-align: center;
+        }
+
+        .welcome-description {
+            font-size: 1.1rem;
+            line-height: 1.6;
+            color: #666;
+            text-align: center;
+            margin-bottom: 2rem;
+        }
+
+        .features-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+            gap: 2rem;
+            margin: 2rem 0;
+        }
+
+        .feature-card {
+            background: rgba(255, 255, 255, 0.95);
+            border-radius: 15px;
+            padding: 2rem;
+            box-shadow: 0 8px 25px rgba(0, 0, 0, 0.1);
+            transition: transform 0.3s ease, box-shadow 0.3s ease;
+        }
+
+        .feature-card:hover {
+            transform: translateY(-5px);
+            box-shadow: 0 15px 40px rgba(0, 0, 0, 0.15);
+        }
+
+        .feature-icon {
+            font-size: 3rem;
+            margin-bottom: 1rem;
+            text-align: center;
+        }
+
+        .feature-title {
+            font-size: 1.3rem;
+            font-weight: bold;
+            margin-bottom: 1rem;
+            text-align: center;
+        }
+
+        .feature-description {
+            color: #666;
+            line-height: 1.6;
+            text-align: center;
+        }
+
+        .cta-section {
+            background: rgba(255, 255, 255, 0.95);
+            border-radius: 20px;
+            padding: 2rem;
+            text-align: center;
+            box-shadow: 0 10px 30px rgba(0, 0, 0, 0.1);
+        }
+
+        .cta-title {
+            font-size: 2rem;
+            margin-bottom: 1rem;
+            color: #333;
+        }
+
+        .cta-description {
+            font-size: 1.1rem;
+            color: #666;
+            margin-bottom: 2rem;
+        }
+
+        .telegram-btn {
+            display: inline-flex;
+            align-items: center;
+            gap: 0.5rem;
+            background: #0088cc;
+            color: white;
+            padding: 1rem 2rem;
+            border: none;
+            border-radius: 50px;
+            font-size: 1.1rem;
+            font-weight: bold;
+            text-decoration: none;
+            transition: background 0.3s ease, transform 0.3s ease;
+            cursor: pointer;
+        }
+
+        .telegram-btn:hover {
+            background: #006ba3;
+            transform: translateY(-2px);
+        }
+
+        .status-section {
+            background: rgba(255, 255, 255, 0.95);
+            border-radius: 20px;
+            padding: 2rem;
+            margin-top: 2rem;
+            box-shadow: 0 10px 30px rgba(0, 0, 0, 0.1);
+        }
+
+        .status-title {
+            font-size: 1.5rem;
+            margin-bottom: 1rem;
+            color: #333;
+            text-align: center;
+        }
+
+        .status-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            gap: 1rem;
+        }
+
+        .status-item {
+            background: #f8f9fa;
+            border-radius: 10px;
+            padding: 1rem;
+            text-align: center;
+        }
+
+        .status-label {
+            font-size: 0.9rem;
+            color: #666;
+            margin-bottom: 0.5rem;
+        }
+
+        .status-value {
+            font-size: 1.2rem;
+            font-weight: bold;
+            color: #333;
+        }
+
+        .status-online {
+            color: #28a745;
+        }
+
+        .status-offline {
+            color: #dc3545;
+        }
+
+        footer {
+            background: rgba(0, 0, 0, 0.1);
+            padding: 2rem;
+            text-align: center;
+            color: rgba(255, 255, 255, 0.8);
+        }
+
+        .footer-content {
+            max-width: 1200px;
+            margin: 0 auto;
+        }
+
+        .footer-links {
+            display: flex;
+            justify-content: center;
+            gap: 2rem;
+            margin-bottom: 1rem;
+        }
+
+        .footer-link {
+            color: rgba(255, 255, 255, 0.8);
+            text-decoration: none;
+            transition: color 0.3s ease;
+        }
+
+        .footer-link:hover {
+            color: white;
+        }
+
+        @media (max-width: 768px) {
+            .header-content {
+                flex-direction: column;
+                gap: 1rem;
+            }
+
+            .main-container {
+                padding: 0 1rem;
+            }
+
+            .welcome-title {
+                font-size: 2rem;
+            }
+
+            .features-grid {
+                grid-template-columns: 1fr;
+            }
+
+            .footer-links {
+                flex-direction: column;
+                gap: 1rem;
+            }
+        }
+
+        .pulse {
+            animation: pulse 2s infinite;
+        }
+
+        @keyframes pulse {
+            0% {
+                opacity: 1;
+            }
+            50% {
+                opacity: 0.5;
+            }
+            100% {
+                opacity: 1;
+            }
+        }
+    </style>
+</head>
+<body>
+    <header>
+        <div class="header-content">
+            <div class="logo">
+                <i class="fas fa-shield-alt"></i>
+                Web3 Tor Browser App
+            </div>
+        </div>
+    </header>
+
+    <div class="main-container">
+        <section class="welcome-section">
+            <h1 class="welcome-title">
+                <i class="fas fa-rocket"></i>
+                Добро пожаловать в Web3 Tor Browser App
+            </h1>
+            <p class="welcome-description">
+                Безопасное и анонимное Web3 приложение с встроенным Tor браузером, управляемое через Telegram бота. 
+                Получайте полный доступ к защищенному браузеру на удаленном VPS сервере с максимальной приватностью.
+            </p>
+        </section>
+
+        <section class="features-grid">
+            <div class="feature-card">
+                <div class="feature-icon" style="color: #ff6b6b;">
+                    <i class="fas fa-user-secret"></i>
+                </div>
+                <h3 class="feature-title">Полная Анонимность</h3>
+                <p class="feature-description">
+                    Весь трафик проходит через сеть Tor, обеспечивая максимальную приватность и защиту от слежки.
+                </p>
+            </div>
+
+            <div class="feature-card">
+                <div class="feature-icon" style="color: #4ecdc4;">
+                    <i class="fab fa-telegram"></i>
+                </div>
+                <h3 class="feature-title">Управление через Telegram</h3>
+                <p class="feature-description">
+                    Простое и удобное управление браузером через Telegram бота с интуитивным интерфейсом.
+                </p>
+            </div>
+
+            <div class="feature-card">
+                <div class="feature-icon" style="color: #45b7d1;">
+                    <i class="fab fa-ethereum"></i>
+                </div>
+                <h3 class="feature-title">Web3 Интеграция</h3>
+                <p class="feature-description">
+                    Встроенная поддержка Web3, работа с криптовалютами и DeFi протоколами безопасно и анонимно.
+                </p>
+            </div>
+
+            <div class="feature-card">
+                <div class="feature-icon" style="color: #f7b731;">
+                    <i class="fas fa-desktop"></i>
+                </div>
+                <h3 class="feature-title">Удаленный Доступ</h3>
+                <p class="feature-description">
+                    Полный графический интерфейс браузера через VNC с возможностью работы из любого устройства.
+                </p>
+            </div>
+
+            <div class="feature-card">
+                <div class="feature-icon" style="color: #5f27cd;">
+                    <i class="fas fa-lock"></i>
+                </div>
+                <h3 class="feature-title">Максимальная Безопасность</h3>
+                <p class="feature-description">
+                    Изолированная среда в Docker контейнерах с автоматическим удалением данных после сессии.
+                </p>
+            </div>
+
+            <div class="feature-card">
+                <div class="feature-icon" style="color: #00d2d3;">
+                    <i class="fas fa-cloud-upload-alt"></i>
+                </div>
+                <h3 class="feature-title">VPS Размещение</h3>
+                <p class="feature-description">
+                    Браузер работает на мощном VPS сервере, обеспечивая стабильность и высокую производительность.
+                </p>
+            </div>
+        </section>
+
+        <section class="status-section">
+            <h2 class="status-title">Статус Сервисов</h2>
+            <div class="status-grid">
+                <div class="status-item">
+                    <div class="status-label">Telegram Bot</div>
+                    <div class="status-value status-online" id="telegram-status">
+                        <i class="fas fa-circle pulse"></i> Онлайн
+                    </div>
+                </div>
+                <div class="status-item">
+                    <div class="status-label">Web3 Сервисы</div>
+                    <div class="status-value status-online" id="web3-status">
+                        <i class="fas fa-circle pulse"></i> Готов
+                    </div>
+                </div>
+                <div class="status-item">
+                    <div class="status-label">Tor Сеть</div>
+                    <div class="status-value status-online" id="tor-status">
+                        <i class="fas fa-circle pulse"></i> Подключен
+                    </div>
+                </div>
+                <div class="status-item">
+                    <div class="status-label">VNC Сервер</div>
+                    <div class="status-value status-online" id="vnc-status">
+                        <i class="fas fa-circle pulse"></i> Доступен
+                    </div>
+                </div>
+                <div class="status-item">
+                    <div class="status-label">Активных Сессий</div>
+                    <div class="status-value" id="sessions-count">0</div>
+                </div>
+            </div>
+        </section>
+
+        <section class="cta-section">
+            <h2 class="cta-title">Начните Использовать Прямо Сейчас!</h2>
+            <p class="cta-description">
+                Найдите нашего Telegram бота и начните безопасно пользоваться интернетом уже сегодня.
+            </p>
+            <a href="https://t.me/your_bot_username" class="telegram-btn" target="_blank">
+                <i class="fab fa-telegram"></i>
+                Открыть в Telegram
+            </a>
+        </section>
+    </div>
+
+    <footer>
+        <div class="footer-content">
+            <div class="footer-links">
+                <a href="#" class="footer-link">Документация</a>
+                <a href="#" class="footer-link">Поддержка</a>
+                <a href="#" class="footer-link">Конфиденциальность</a>
+                <a href="#" class="footer-link">Условия использования</a>
+            </div>
+            <p>&copy; 2024 Web3 Tor Browser App. Сделано с ❤️ для приватности и безопасности.</p>
+        </div>
+    </footer>
+
+    <script>
+        // Обновление статуса сервисов
+        async function updateServiceStatus() {
+            try {
+                const response = await fetch('/api/status');
+                if (response.ok) {
+                    const data = await response.json();
+                    
+                    // Обновление статусов
+                    updateStatus('telegram-status', data.telegram);
+                    updateStatus('web3-status', data.web3);
+                    updateStatus('tor-status', data.tor);
+                    updateStatus('vnc-status', data.vnc);
+                    
+                    // Обновление количества сессий
+                    document.getElementById('sessions-count').textContent = data.activeSessions || 0;
+                }
+            } catch (error) {
+                console.error('Ошибка получения статуса:', error);
+            }
+        }
+
+        function updateStatus(elementId, isOnline) {
+            const element = document.getElementById(elementId);
+            if (isOnline) {
+                element.className = 'status-value status-online';
+                element.innerHTML = '<i class="fas fa-circle pulse"></i> Онлайн';
+            } else {
+                element.className = 'status-value status-offline';
+                element.innerHTML = '<i class="fas fa-circle"></i> Офлайн';
+            }
+        }
+
+        // Обновление статуса каждые 30 секунд
+        setInterval(updateServiceStatus, 30000);
+        
+        // Первоначальное обновление
+        updateServiceStatus();
+
+        // Анимация появления карточек
+        const observerOptions = {
+            threshold: 0.1,
+            rootMargin: '0px 0px -50px 0px'
+        };
+
+        const observer = new IntersectionObserver((entries) => {
+            entries.forEach(entry => {
+                if (entry.isIntersecting) {
+                    entry.target.style.animation = 'fadeInUp 0.6s ease forwards';
+                }
+            });
+        }, observerOptions);
+
+        // Наблюдение за карточками
+        document.querySelectorAll('.feature-card').forEach(card => {
+            observer.observe(card);
+        });
+
+        // CSS анимация для карточек
+        const style = document.createElement('style');
+        style.textContent = `
+            .feature-card {
+                opacity: 0;
+                transform: translateY(30px);
+            }
+            
+            @keyframes fadeInUp {
+                to {
+                    opacity: 1;
+                    transform: translateY(0);
+                }
+            }
+        `;
+        document.head.appendChild(style);
+    </script>
+</body>
+</html>

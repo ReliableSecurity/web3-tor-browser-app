@@ -1,0 +1,13 @@
+[begin] (Fluxbox)
+[exec] (Tor Browser) {/usr/local/bin/tor_launcher.sh}
+[exec] (Terminal) {xterm}
+[exec] (Calculator) {xcalc}
+[separator]
+[submenu] (Tools)
+    [exec] (Screenshot) {import /tmp/screenshot.png}
+    [exec] (File Manager) {pcmanfm}
+[end]
+[separator]
+[restart] (Restart Fluxbox)
+[exit] (Exit)
+[end]

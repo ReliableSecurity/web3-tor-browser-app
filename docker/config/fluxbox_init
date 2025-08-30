@@ -1,0 +1,27 @@
+# Fluxbox init файл
+
+# Фокус
+session.screen0.focusModel: ClickToFocus
+session.screen0.autoRaiseDelay: 250
+
+# Рабочий стол
+session.screen0.workspaceNames: Desktop,
+
+# Панель задач
+session.screen0.toolbar.visible: true
+session.screen0.toolbar.placement: BottomCenter
+session.screen0.toolbar.height: 0
+
+# Стиль
+session.styleFile: /usr/share/fluxbox/styles/Blue
+
+# Меню
+session.menuFile: ~/.fluxbox/menu
+
+# Автостарт приложений
+session.screen0.autoRaise: false
+session.screen0.clickRaises: true
+session.screen0.decorateTransient: false
+session.screen0.defaultDeco: NORMAL
+session.screen0.menuDelay: 200
+session.screen0.windowPlacement: RowMinOverlapPlacement

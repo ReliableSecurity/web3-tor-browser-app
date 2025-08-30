@@ -1,0 +1,90 @@
+version: '3.8'
+
+services:
+  web3-tor-app:
+    build: 
+      context: .
+      dockerfile: docker/Dockerfile
+    container_name: web3-tor-app
+    ports:
+      - "3000:3000"     # Основное приложение
+      - "5900-5950:5900-5950"  # VNC порты
+      - "6080-6130:6080-6130"  # Веб VNC порты
+    environment:
+      - NODE_ENV=${NODE_ENV:-production}
+      - PORT=3000
+      - TELEGRAM_BOT_TOKEN=${TELEGRAM_BOT_TOKEN}
+      - BASE_URL=${BASE_URL:-http://localhost:3000}
+      # Web3 настройки
+      - ETHEREUM_RPC=${ETHEREUM_RPC}
+      - POLYGON_RPC=${POLYGON_RPC}
+      - BSC_RPC=${BSC_RPC}
+      - ARBITRUM_RPC=${ARBITRUM_RPC}
+      # Безопасность
+      - JWT_SECRET=${JWT_SECRET}
+      - ENCRYPTION_KEY=${ENCRYPTION_KEY}
+    volumes:
+      - ./logs:/app/logs
+      - ./data:/app/data
+      - /var/run/docker.sock:/var/run/docker.sock  # Для управления Docker контейнерами
+    restart: unless-stopped
+    networks:
+      - web3-tor-network
+    depends_on:
+      - redis
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:3000/health"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+
+  redis:
+    image: redis:7-alpine
+    container_name: web3-tor-redis
+    restart: unless-stopped
+    ports:
+      - "6379:6379"
+    volumes:
+      - redis_data:/data
+    networks:
+      - web3-tor-network
+    command: redis-server --appendonly yes --requirepass ${REDIS_PASSWORD:-defaultpassword}
+
+  nginx:
+    image: nginx:alpine
+    container_name: web3-tor-nginx
+    ports:
+      - "80:80"
+      - "443:443"
+    volumes:
+      - ./config/nginx.conf:/etc/nginx/nginx.conf:ro
+      - ./config/ssl:/etc/nginx/ssl:ro
+      - ./logs/nginx:/var/log/nginx
+    restart: unless-stopped
+    networks:
+      - web3-tor-network
+    depends_on:
+      - web3-tor-app
+
+  watchtower:
+    image: containrrr/watchtower
+    container_name: web3-tor-watchtower
+    volumes:
+      - /var/run/docker.sock:/var/run/docker.sock
+    environment:
+      - WATCHTOWER_CLEANUP=true
+      - WATCHTOWER_POLL_INTERVAL=3600  # Проверка каждый час
+    restart: unless-stopped
+    networks:
+      - web3-tor-network
+
+volumes:
+  redis_data:
+    driver: local
+
+networks:
+  web3-tor-network:
+    driver: bridge
+    ipam:
+      config:
+        - subnet: 172.20.0.0/16
