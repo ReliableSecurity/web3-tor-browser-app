@@ -1,0 +1,1760 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
+    <title>Web3 Tor Browser - Enhanced Interface</title>
+    
+    <!-- Material Design Icons -->
+    <link href="https://fonts.googleapis.com/icon?family=Material+Icons" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    
+    <style>
+        /* 🎨 CSS Variables for theming */
+        :root {
+            /* Light theme */
+            --bg-primary: #ffffff;
+            --bg-secondary: #f8f9fa;
+            --bg-tertiary: #e9ecef;
+            --text-primary: #212529;
+            --text-secondary: #6c757d;
+            --text-muted: #adb5bd;
+            --accent-primary: #007bff;
+            --accent-secondary: #0056b3;
+            --success: #28a745;
+            --warning: #ffc107;
+            --danger: #dc3545;
+            --border: #dee2e6;
+            --shadow: rgba(0, 0, 0, 0.1);
+            --gradient: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+        }
+
+        /* 🌙 Dark theme */
+        [data-theme="dark"] {
+            --bg-primary: #121212;
+            --bg-secondary: #1e1e1e;
+            --bg-tertiary: #2d2d2d;
+            --text-primary: #ffffff;
+            --text-secondary: #b3b3b3;
+            --text-muted: #666666;
+            --accent-primary: #0d6efd;
+            --accent-secondary: #0b5ed7;
+            --success: #198754;
+            --warning: #fd7e14;
+            --danger: #dc3545;
+            --border: #404040;
+            --shadow: rgba(0, 0, 0, 0.3);
+            --gradient: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+        }
+
+        /* 🎯 Cyber theme */
+        [data-theme="cyber"] {
+            --bg-primary: #0a0a0a;
+            --bg-secondary: #1a1a1a;
+            --bg-tertiary: #2a2a2a;
+            --text-primary: #00ff41;
+            --text-secondary: #00cc33;
+            --text-muted: #009926;
+            --accent-primary: #ff0080;
+            --accent-secondary: #cc0066;
+            --success: #00ff41;
+            --warning: #ffff00;
+            --danger: #ff0040;
+            --border: #00ff41;
+            --shadow: rgba(0, 255, 65, 0.2);
+            --gradient: linear-gradient(135deg, #ff0080 0%, #00ff41 100%);
+        }
+
+        /* 🎨 Base styles */
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Inter', -apple-system, BlinkMacSystemFont, sans-serif;
+            background: var(--bg-primary);
+            color: var(--text-primary);
+            transition: all 0.3s ease;
+            overflow-x: hidden;
+            user-select: none;
+            -webkit-user-select: none;
+            -webkit-touch-callout: none;
+        }
+
+        /* 🎛️ Main container */
+        .app-container {
+            display: flex;
+            flex-direction: column;
+            height: 100vh;
+            position: relative;
+        }
+
+        /* 📱 Header */
+        .header {
+            background: var(--gradient);
+            color: white;
+            padding: 1rem;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            box-shadow: 0 2px 10px var(--shadow);
+            position: relative;
+            z-index: 1000;
+        }
+
+        .header-title {
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+            font-weight: 600;
+        }
+
+        .header-actions {
+            display: flex;
+            gap: 0.5rem;
+        }
+
+        .header-btn {
+            background: rgba(255, 255, 255, 0.2);
+            border: none;
+            color: white;
+            padding: 0.5rem;
+            border-radius: 50%;
+            cursor: pointer;
+            transition: all 0.2s ease;
+            backdrop-filter: blur(10px);
+        }
+
+        .header-btn:hover {
+            background: rgba(255, 255, 255, 0.3);
+            transform: scale(1.1);
+        }
+
+        /* 🎨 Theme toggle */
+        .theme-selector {
+            position: fixed;
+            top: 1rem;
+            right: 1rem;
+            z-index: 1001;
+            display: flex;
+            gap: 0.25rem;
+            background: var(--bg-secondary);
+            border-radius: 25px;
+            padding: 0.25rem;
+            box-shadow: 0 4px 20px var(--shadow);
+            border: 1px solid var(--border);
+        }
+
+        .theme-btn {
+            width: 2.5rem;
+            height: 2.5rem;
+            border: none;
+            border-radius: 50%;
+            cursor: pointer;
+            transition: all 0.2s ease;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 1rem;
+        }
+
+        .theme-btn.light { background: #ffffff; color: #333; }
+        .theme-btn.dark { background: #121212; color: #fff; }
+        .theme-btn.cyber { background: linear-gradient(45deg, #ff0080, #00ff41); color: #000; }
+
+        .theme-btn.active {
+            transform: scale(1.1);
+            box-shadow: 0 0 15px rgba(0, 123, 255, 0.5);
+        }
+
+        /* 🌐 Browser container */
+        .browser-container {
+            flex: 1;
+            position: relative;
+            background: var(--bg-secondary);
+            border-top: 1px solid var(--border);
+        }
+
+        /* 🔧 Control panel */
+        .control-panel {
+            background: var(--bg-secondary);
+            border-bottom: 1px solid var(--border);
+            padding: 1rem;
+            display: flex;
+            align-items: center;
+            gap: 1rem;
+            flex-wrap: wrap;
+        }
+
+        .url-bar {
+            flex: 1;
+            min-width: 300px;
+            display: flex;
+            align-items: center;
+            background: var(--bg-primary);
+            border: 1px solid var(--border);
+            border-radius: 25px;
+            padding: 0.5rem 1rem;
+            box-shadow: inset 0 2px 4px var(--shadow);
+        }
+
+        .url-input {
+            flex: 1;
+            border: none;
+            background: transparent;
+            color: var(--text-primary);
+            font-size: 1rem;
+            outline: none;
+        }
+
+        .url-input::placeholder {
+            color: var(--text-muted);
+        }
+
+        .control-btn {
+            background: var(--accent-primary);
+            color: white;
+            border: none;
+            padding: 0.5rem 1rem;
+            border-radius: 20px;
+            cursor: pointer;
+            font-weight: 500;
+            transition: all 0.2s ease;
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+        }
+
+        .control-btn:hover {
+            background: var(--accent-secondary);
+            transform: translateY(-1px);
+        }
+
+        .control-btn:active {
+            transform: translateY(0);
+        }
+
+        .control-btn.danger {
+            background: var(--danger);
+        }
+
+        .control-btn.success {
+            background: var(--success);
+        }
+
+        /* 📊 Status indicators */
+        .status-bar {
+            display: flex;
+            gap: 1rem;
+            align-items: center;
+            font-size: 0.875rem;
+        }
+
+        .status-indicator {
+            display: flex;
+            align-items: center;
+            gap: 0.25rem;
+            padding: 0.25rem 0.5rem;
+            border-radius: 15px;
+            background: var(--bg-tertiary);
+            border: 1px solid var(--border);
+        }
+
+        .status-dot {
+            width: 8px;
+            height: 8px;
+            border-radius: 50%;
+            animation: pulse 2s infinite;
+        }
+
+        .status-dot.connected { background: var(--success); }
+        .status-dot.warning { background: var(--warning); }
+        .status-dot.error { background: var(--danger); }
+
+        @keyframes pulse {
+            0%, 100% { opacity: 1; }
+            50% { opacity: 0.5; }
+        }
+
+        /* 🖥️ Browser viewport */
+        .browser-viewport {
+            flex: 1;
+            background: var(--bg-primary);
+            border: 1px solid var(--border);
+            border-radius: 8px;
+            margin: 1rem;
+            overflow: hidden;
+            position: relative;
+            box-shadow: 0 4px 20px var(--shadow);
+        }
+
+        .browser-iframe {
+            width: 100%;
+            height: 100%;
+            border: none;
+            background: white;
+        }
+
+        /* 📱 Mobile optimizations */
+        @media (max-width: 768px) {
+            .header {
+                padding: 0.75rem;
+            }
+            
+            .control-panel {
+                flex-direction: column;
+                gap: 0.75rem;
+                padding: 0.75rem;
+            }
+            
+            .url-bar {
+                min-width: unset;
+                width: 100%;
+            }
+            
+            .browser-viewport {
+                margin: 0.5rem;
+            }
+            
+            .status-bar {
+                flex-wrap: wrap;
+                gap: 0.5rem;
+            }
+        }
+
+        /* 🎮 Gesture indicators */
+        .gesture-hint {
+            position: fixed;
+            bottom: 1rem;
+            left: 50%;
+            transform: translateX(-50%);
+            background: var(--bg-secondary);
+            color: var(--text-secondary);
+            padding: 0.5rem 1rem;
+            border-radius: 20px;
+            border: 1px solid var(--border);
+            font-size: 0.75rem;
+            opacity: 0;
+            transition: opacity 0.3s ease;
+            pointer-events: none;
+            z-index: 1000;
+        }
+
+        .gesture-hint.show {
+            opacity: 1;
+        }
+
+        /* 🎤 Voice indicator */
+        .voice-indicator {
+            position: fixed;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            background: var(--accent-primary);
+            color: white;
+            padding: 2rem;
+            border-radius: 50%;
+            box-shadow: 0 10px 30px var(--shadow);
+            opacity: 0;
+            transform: translate(-50%, -50%) scale(0.5);
+            transition: all 0.3s ease;
+            z-index: 1001;
+        }
+
+        .voice-indicator.active {
+            opacity: 1;
+            transform: translate(-50%, -50%) scale(1);
+            animation: voicePulse 1.5s infinite;
+        }
+
+        @keyframes voicePulse {
+            0%, 100% { box-shadow: 0 10px 30px var(--shadow), 0 0 0 0 rgba(0, 123, 255, 0.7); }
+            50% { box-shadow: 0 10px 30px var(--shadow), 0 0 0 20px rgba(0, 123, 255, 0); }
+        }
+
+        /* ⚙️ Settings modal */
+        .settings-modal {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(0, 0, 0, 0.5);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            z-index: 2000;
+            opacity: 0;
+            visibility: hidden;
+            transition: all 0.3s ease;
+        }
+
+        .settings-modal.show {
+            opacity: 1;
+            visibility: visible;
+        }
+
+        .settings-content {
+            background: var(--bg-primary);
+            border-radius: 15px;
+            padding: 2rem;
+            max-width: 500px;
+            width: 90%;
+            max-height: 80vh;
+            overflow-y: auto;
+            box-shadow: 0 20px 60px var(--shadow);
+            transform: scale(0.9) translateY(20px);
+            transition: transform 0.3s ease;
+        }
+
+        .settings-modal.show .settings-content {
+            transform: scale(1) translateY(0);
+        }
+
+        .settings-header {
+            display: flex;
+            justify-content: between;
+            align-items: center;
+            margin-bottom: 1.5rem;
+            padding-bottom: 1rem;
+            border-bottom: 1px solid var(--border);
+        }
+
+        .settings-title {
+            font-size: 1.5rem;
+            font-weight: 600;
+            margin: 0;
+        }
+
+        .close-btn {
+            background: none;
+            border: none;
+            font-size: 1.5rem;
+            color: var(--text-secondary);
+            cursor: pointer;
+            padding: 0.25rem;
+            border-radius: 50%;
+            transition: all 0.2s ease;
+        }
+
+        .close-btn:hover {
+            background: var(--bg-tertiary);
+            color: var(--text-primary);
+        }
+
+        /* 🔧 Settings sections */
+        .settings-section {
+            margin-bottom: 2rem;
+        }
+
+        .settings-section-title {
+            font-size: 1.125rem;
+            font-weight: 600;
+            margin-bottom: 1rem;
+            color: var(--text-primary);
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+        }
+
+        .setting-item {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 1rem 0;
+            border-bottom: 1px solid var(--border);
+        }
+
+        .setting-item:last-child {
+            border-bottom: none;
+        }
+
+        .setting-label {
+            flex: 1;
+        }
+
+        .setting-title {
+            font-weight: 500;
+            color: var(--text-primary);
+            margin-bottom: 0.25rem;
+        }
+
+        .setting-description {
+            font-size: 0.875rem;
+            color: var(--text-secondary);
+        }
+
+        /* 🔘 Toggle switch */
+        .toggle-switch {
+            position: relative;
+            width: 50px;
+            height: 24px;
+            background: var(--bg-tertiary);
+            border-radius: 12px;
+            border: 1px solid var(--border);
+            cursor: pointer;
+            transition: all 0.3s ease;
+        }
+
+        .toggle-switch.active {
+            background: var(--accent-primary);
+        }
+
+        .toggle-slider {
+            position: absolute;
+            top: 2px;
+            left: 2px;
+            width: 18px;
+            height: 18px;
+            background: white;
+            border-radius: 50%;
+            transition: all 0.3s ease;
+            box-shadow: 0 2px 4px rgba(0, 0, 0, 0.2);
+        }
+
+        .toggle-switch.active .toggle-slider {
+            transform: translateX(26px);
+        }
+
+        /* 📊 Progress indicators */
+        .progress-bar {
+            width: 100%;
+            height: 4px;
+            background: var(--bg-tertiary);
+            border-radius: 2px;
+            overflow: hidden;
+            margin: 0.5rem 0;
+        }
+
+        .progress-fill {
+            height: 100%;
+            background: var(--gradient);
+            transition: width 0.3s ease;
+            border-radius: 2px;
+        }
+
+        /* 🎨 Animated loading */
+        .loading-spinner {
+            width: 20px;
+            height: 20px;
+            border: 2px solid var(--bg-tertiary);
+            border-top: 2px solid var(--accent-primary);
+            border-radius: 50%;
+            animation: spin 1s linear infinite;
+        }
+
+        @keyframes spin {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
+        }
+
+        /* 🎯 Floating action button */
+        .fab {
+            position: fixed;
+            bottom: 2rem;
+            right: 2rem;
+            width: 56px;
+            height: 56px;
+            border-radius: 50%;
+            background: var(--gradient);
+            color: white;
+            border: none;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 1.5rem;
+            box-shadow: 0 8px 25px var(--shadow);
+            transition: all 0.3s ease;
+            z-index: 1000;
+        }
+
+        .fab:hover {
+            transform: scale(1.1);
+            box-shadow: 0 12px 35px var(--shadow);
+        }
+
+        .fab:active {
+            transform: scale(0.95);
+        }
+
+        /* 🎨 Notification toast */
+        .toast {
+            position: fixed;
+            top: 1rem;
+            left: 50%;
+            transform: translateX(-50%) translateY(-100px);
+            background: var(--bg-primary);
+            color: var(--text-primary);
+            padding: 1rem 1.5rem;
+            border-radius: 10px;
+            border: 1px solid var(--border);
+            box-shadow: 0 10px 30px var(--shadow);
+            opacity: 0;
+            transition: all 0.4s ease;
+            z-index: 2000;
+            max-width: 90%;
+        }
+
+        .toast.show {
+            transform: translateX(-50%) translateY(0);
+            opacity: 1;
+        }
+
+        .toast.success { border-left: 4px solid var(--success); }
+        .toast.warning { border-left: 4px solid var(--warning); }
+        .toast.error { border-left: 4px solid var(--danger); }
+
+        /* 🎮 Touch gestures overlay */
+        .gesture-overlay {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            pointer-events: none;
+            z-index: 100;
+        }
+
+        .swipe-indicator {
+            position: absolute;
+            width: 50px;
+            height: 3px;
+            background: var(--accent-primary);
+            border-radius: 2px;
+            opacity: 0;
+            transition: all 0.3s ease;
+        }
+
+        .swipe-indicator.left {
+            top: 50%;
+            left: 0;
+            transform: translateY(-50%);
+        }
+
+        .swipe-indicator.right {
+            top: 50%;
+            right: 0;
+            transform: translateY(-50%);
+        }
+
+        .swipe-indicator.show {
+            opacity: 1;
+            animation: swipeGlow 1s ease-in-out;
+        }
+
+        @keyframes swipeGlow {
+            0%, 100% { box-shadow: 0 0 5px var(--accent-primary); }
+            50% { box-shadow: 0 0 20px var(--accent-primary); }
+        }
+
+        /* 🎨 Accessibility */
+        .sr-only {
+            position: absolute;
+            width: 1px;
+            height: 1px;
+            padding: 0;
+            margin: -1px;
+            overflow: hidden;
+            clip: rect(0, 0, 0, 0);
+            white-space: nowrap;
+            border: 0;
+        }
+
+        /* 🎯 Focus styles */
+        .control-btn:focus,
+        .url-input:focus,
+        .theme-btn:focus {
+            outline: 2px solid var(--accent-primary);
+            outline-offset: 2px;
+        }
+
+        /* 🌟 Special effects */
+        .sparkle {
+            position: relative;
+            overflow: hidden;
+        }
+
+        .sparkle::before {
+            content: '';
+            position: absolute;
+            top: -50%;
+            left: -50%;
+            width: 200%;
+            height: 200%;
+            background: linear-gradient(45deg, transparent 40%, rgba(255, 255, 255, 0.1) 50%, transparent 60%);
+            animation: sparkle 3s infinite;
+            pointer-events: none;
+        }
+
+        @keyframes sparkle {
+            0% { transform: translateX(-100%) translateY(-100%) rotate(45deg); }
+            100% { transform: translateX(100%) translateY(100%) rotate(45deg); }
+        }
+
+        /* 🎨 Glassmorphism effect */
+        .glass {
+            background: rgba(255, 255, 255, 0.1);
+            backdrop-filter: blur(10px);
+            -webkit-backdrop-filter: blur(10px);
+            border: 1px solid rgba(255, 255, 255, 0.2);
+        }
+
+        /* 🎭 Hover effects */
+        .hover-lift {
+            transition: transform 0.2s ease, box-shadow 0.2s ease;
+        }
+
+        .hover-lift:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 8px 25px var(--shadow);
+        }
+
+        /* 🌈 Rainbow border animation */
+        .rainbow-border {
+            position: relative;
+            border-radius: 10px;
+            background: var(--bg-primary);
+        }
+
+        .rainbow-border::before {
+            content: '';
+            position: absolute;
+            inset: -2px;
+            padding: 2px;
+            background: linear-gradient(45deg, #ff0080, #ff8c00, #40e0d0, #9932cc, #ff0080);
+            border-radius: inherit;
+            mask: linear-gradient(#fff 0 0) content-box, linear-gradient(#fff 0 0);
+            mask-composite: exclude;
+            -webkit-mask-composite: xor;
+            animation: rainbowRotate 3s linear infinite;
+        }
+
+        @keyframes rainbowRotate {
+            0% { background-position: 0% 50%; }
+            100% { background-position: 200% 50%; }
+        }
+
+        /* 🎪 Hover cards */
+        .hover-card {
+            transition: all 0.3s ease;
+            border-radius: 10px;
+            padding: 1rem;
+            background: var(--bg-secondary);
+            border: 1px solid var(--border);
+        }
+
+        .hover-card:hover {
+            transform: translateY(-5px) scale(1.02);
+            box-shadow: 0 15px 40px var(--shadow);
+            border-color: var(--accent-primary);
+        }
+    </style>
+</head>
+<body>
+    <div class="app-container">
+        <!-- 🎨 Theme selector -->
+        <div class="theme-selector">
+            <button class="theme-btn light active" data-theme="light" title="Light Theme">
+                ☀️
+            </button>
+            <button class="theme-btn dark" data-theme="dark" title="Dark Theme">
+                🌙
+            </button>
+            <button class="theme-btn cyber" data-theme="cyber" title="Cyber Theme">
+                🤖
+            </button>
+        </div>
+
+        <!-- 📱 Header -->
+        <header class="header">
+            <div class="header-title">
+                <span class="material-icons">security</span>
+                <span>Web3 Tor Browser</span>
+                <span class="sparkle">✨</span>
+            </div>
+            <div class="header-actions">
+                <button class="header-btn" id="voiceBtn" title="Voice Commands">
+                    <span class="material-icons">mic</span>
+                </button>
+                <button class="header-btn" id="settingsBtn" title="Settings">
+                    <span class="material-icons">settings</span>
+                </button>
+                <button class="header-btn" id="helpBtn" title="Help">
+                    <span class="material-icons">help</span>
+                </button>
+            </div>
+        </header>
+
+        <!-- 🔧 Control panel -->
+        <div class="control-panel">
+            <div class="url-bar">
+                <span class="material-icons" style="color: var(--text-muted); margin-right: 0.5rem;">
+                    lock
+                </span>
+                <input 
+                    type="url" 
+                    class="url-input" 
+                    id="urlInput"
+                    placeholder="Enter URL (will be routed through Tor)"
+                    autocomplete="off"
+                />
+                <button class="control-btn" id="goBtn">
+                    <span class="material-icons">arrow_forward</span>
+                    Go
+                </button>
+            </div>
+            
+            <div class="status-bar">
+                <div class="status-indicator">
+                    <div class="status-dot connected" id="torStatus"></div>
+                    <span>Tor</span>
+                </div>
+                <div class="status-indicator">
+                    <div class="status-dot connected" id="web3Status"></div>
+                    <span>Web3</span>
+                </div>
+                <div class="status-indicator">
+                    <div class="status-dot connected" id="securityStatus"></div>
+                    <span>Security</span>
+                </div>
+            </div>
+        </div>
+
+        <!-- 🌐 Browser viewport -->
+        <div class="browser-viewport">
+            <div class="gesture-overlay">
+                <div class="swipe-indicator left" id="swipeLeft"></div>
+                <div class="swipe-indicator right" id="swipeRight"></div>
+            </div>
+            <iframe 
+                class="browser-iframe" 
+                id="browserFrame"
+                src="about:blank"
+                sandbox="allow-scripts allow-same-origin allow-forms allow-popups"
+            ></iframe>
+        </div>
+
+        <!-- 🎤 Voice indicator -->
+        <div class="voice-indicator" id="voiceIndicator">
+            <span class="material-icons">mic</span>
+        </div>
+
+        <!-- 💬 Gesture hint -->
+        <div class="gesture-hint" id="gestureHint">
+            Swipe left/right to navigate • Hold to show options
+        </div>
+
+        <!-- 🎯 Floating action button -->
+        <button class="fab" id="quickActions" title="Quick Actions">
+            <span class="material-icons">add</span>
+        </button>
+    </div>
+
+    <!-- ⚙️ Settings Modal -->
+    <div class="settings-modal" id="settingsModal">
+        <div class="settings-content">
+            <div class="settings-header">
+                <h2 class="settings-title">
+                    <span class="material-icons">settings</span>
+                    Settings
+                </h2>
+                <button class="close-btn" id="closeSettings">
+                    <span class="material-icons">close</span>
+                </button>
+            </div>
+
+            <!-- 🎨 Appearance -->
+            <div class="settings-section">
+                <h3 class="settings-section-title">
+                    <span class="material-icons">palette</span>
+                    Appearance
+                </h3>
+                
+                <div class="setting-item">
+                    <div class="setting-label">
+                        <div class="setting-title">Dark Mode</div>
+                        <div class="setting-description">Switch to dark theme</div>
+                    </div>
+                    <div class="toggle-switch" data-setting="darkMode">
+                        <div class="toggle-slider"></div>
+                    </div>
+                </div>
+
+                <div class="setting-item">
+                    <div class="setting-label">
+                        <div class="setting-title">Animations</div>
+                        <div class="setting-description">Enable interface animations</div>
+                    </div>
+                    <div class="toggle-switch active" data-setting="animations">
+                        <div class="toggle-slider"></div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- 🛡️ Security -->
+            <div class="settings-section">
+                <h3 class="settings-section-title">
+                    <span class="material-icons">security</span>
+                    Security & Privacy
+                </h3>
+                
+                <div class="setting-item">
+                    <div class="setting-label">
+                        <div class="setting-title">Block Trackers</div>
+                        <div class="setting-description">Block tracking scripts and cookies</div>
+                    </div>
+                    <div class="toggle-switch active" data-setting="blockTrackers">
+                        <div class="toggle-slider"></div>
+                    </div>
+                </div>
+
+                <div class="setting-item">
+                    <div class="setting-label">
+                        <div class="setting-title">JavaScript Security</div>
+                        <div class="setting-description">Enhanced JavaScript protection</div>
+                    </div>
+                    <div class="toggle-switch active" data-setting="jsProtection">
+                        <div class="toggle-slider"></div>
+                    </div>
+                </div>
+
+                <div class="setting-item">
+                    <div class="setting-label">
+                        <div class="setting-title">AI Content Filter</div>
+                        <div class="setting-description">Automatically detect and block malicious content</div>
+                    </div>
+                    <div class="toggle-switch active" data-setting="aiFilter">
+                        <div class="toggle-slider"></div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- 🌐 Web3 -->
+            <div class="settings-section">
+                <h3 class="settings-section-title">
+                    <span class="material-icons">account_balance_wallet</span>
+                    Web3 & Crypto
+                </h3>
+                
+                <div class="setting-item">
+                    <div class="setting-label">
+                        <div class="setting-title">Auto-inject MetaMask</div>
+                        <div class="setting-description">Automatically inject MetaMask on Web3 sites</div>
+                    </div>
+                    <div class="toggle-switch active" data-setting="autoMetamask">
+                        <div class="toggle-slider"></div>
+                    </div>
+                </div>
+
+                <div class="setting-item">
+                    <div class="setting-label">
+                        <div class="setting-title">Transaction Warnings</div>
+                        <div class="setting-description">Warn before high-value transactions</div>
+                    </div>
+                    <div class="toggle-switch active" data-setting="txWarnings">
+                        <div class="toggle-slider"></div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- 🎮 Controls -->
+            <div class="settings-section">
+                <h3 class="settings-section-title">
+                    <span class="material-icons">touch_app</span>
+                    Controls & Input
+                </h3>
+                
+                <div class="setting-item">
+                    <div class="setting-label">
+                        <div class="setting-title">Touch Gestures</div>
+                        <div class="setting-description">Enable swipe gestures for navigation</div>
+                    </div>
+                    <div class="toggle-switch active" data-setting="touchGestures">
+                        <div class="toggle-slider"></div>
+                    </div>
+                </div>
+
+                <div class="setting-item">
+                    <div class="setting-label">
+                        <div class="setting-title">Voice Commands</div>
+                        <div class="setting-description">Control browser with voice</div>
+                    </div>
+                    <div class="toggle-switch" data-setting="voiceCommands">
+                        <div class="toggle-slider"></div>
+                    </div>
+                </div>
+
+                <div class="setting-item">
+                    <div class="setting-label">
+                        <div class="setting-title">Keyboard Shortcuts</div>
+                        <div class="setting-description">Enable keyboard shortcuts</div>
+                    </div>
+                    <div class="toggle-switch active" data-setting="keyboardShortcuts">
+                        <div class="toggle-slider"></div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- 📱 Toast notification -->
+    <div class="toast" id="toast"></div>
+
+    <script>
+        /**
+         * 🚀 Enhanced Web App Manager
+         * Advanced UI/UX with themes, gestures, and voice commands
+         */
+        class EnhancedWebApp {
+            constructor() {
+                this.currentTheme = localStorage.getItem('theme') || 'light';
+                this.settings = this.loadSettings();
+                this.gestureStartX = 0;
+                this.gestureStartY = 0;
+                this.isGesturing = false;
+                this.voiceRecognition = null;
+                this.isListening = false;
+                
+                this.init();
+            }
+
+            /**
+             * 🔧 Initialize the app
+             */
+            init() {
+                this.initTheme();
+                this.initEventListeners();
+                this.initGestures();
+                this.initVoiceCommands();
+                this.initKeyboardShortcuts();
+                this.initTelegramWebApp();
+                
+                console.log('🚀 Enhanced Web App initialized');
+                this.showToast('Web3 Tor Browser ready!', 'success');
+            }
+
+            /**
+             * 🎨 Initialize theming
+             */
+            initTheme() {
+                document.documentElement.setAttribute('data-theme', this.currentTheme);
+                
+                // Update theme button states
+                document.querySelectorAll('.theme-btn').forEach(btn => {
+                    btn.classList.toggle('active', btn.dataset.theme === this.currentTheme);
+                });
+            }
+
+            /**
+             * 🖱️ Initialize event listeners
+             */
+            initEventListeners() {
+                // Theme switching
+                document.querySelectorAll('.theme-btn').forEach(btn => {
+                    btn.addEventListener('click', () => this.switchTheme(btn.dataset.theme));
+                });
+
+                // URL navigation
+                document.getElementById('goBtn').addEventListener('click', () => this.navigateToUrl());
+                document.getElementById('urlInput').addEventListener('keypress', (e) => {
+                    if (e.key === 'Enter') this.navigateToUrl();
+                });
+
+                // Settings modal
+                document.getElementById('settingsBtn').addEventListener('click', () => this.openSettings());
+                document.getElementById('closeSettings').addEventListener('click', () => this.closeSettings());
+                document.getElementById('settingsModal').addEventListener('click', (e) => {
+                    if (e.target.id === 'settingsModal') this.closeSettings();
+                });
+
+                // Voice commands
+                document.getElementById('voiceBtn').addEventListener('click', () => this.toggleVoiceCommands());
+
+                // Settings toggles
+                document.querySelectorAll('.toggle-switch').forEach(toggle => {
+                    toggle.addEventListener('click', () => this.toggleSetting(toggle));
+                });
+
+                // FAB actions
+                document.getElementById('quickActions').addEventListener('click', () => this.showQuickActions());
+            }
+
+            /**
+             * 🎮 Initialize touch gestures
+             */
+            initGestures() {
+                if (!this.settings.touchGestures) return;
+
+                const viewport = document.querySelector('.browser-viewport');
+
+                viewport.addEventListener('touchstart', (e) => {
+                    if (e.touches.length === 1) {
+                        this.gestureStartX = e.touches[0].clientX;
+                        this.gestureStartY = e.touches[0].clientY;
+                        this.isGesturing = true;
+                        this.showGestureHint();
+                    }
+                }, { passive: true });
+
+                viewport.addEventListener('touchmove', (e) => {
+                    if (!this.isGesturing || e.touches.length !== 1) return;
+
+                    const deltaX = e.touches[0].clientX - this.gestureStartX;
+                    const deltaY = e.touches[0].clientY - this.gestureStartY;
+
+                    // Show swipe indicators
+                    if (Math.abs(deltaX) > 50 && Math.abs(deltaY) < 100) {
+                        if (deltaX > 0) {
+                            this.showSwipeIndicator('right');
+                        } else {
+                            this.showSwipeIndicator('left');
+                        }
+                    }
+                }, { passive: true });
+
+                viewport.addEventListener('touchend', (e) => {
+                    if (!this.isGesturing) return;
+
+                    const deltaX = e.changedTouches[0].clientX - this.gestureStartX;
+                    const deltaY = e.changedTouches[0].clientY - this.gestureStartY;
+
+                    // Detect swipe gestures
+                    if (Math.abs(deltaX) > 100 && Math.abs(deltaY) < 100) {
+                        if (deltaX > 0) {
+                            this.handleSwipeRight();
+                        } else {
+                            this.handleSwipeLeft();
+                        }
+                    }
+
+                    this.isGesturing = false;
+                    this.hideGestureIndicators();
+                }, { passive: true });
+
+                console.log('🎮 Touch gestures initialized');
+            }
+
+            /**
+             * 🎤 Initialize voice commands
+             */
+            initVoiceCommands() {
+                if (!('webkitSpeechRecognition' in window) && !('SpeechRecognition' in window)) {
+                    console.warn('Speech recognition not supported');
+                    return;
+                }
+
+                const SpeechRecognition = window.SpeechRecognition || window.webkitSpeechRecognition;
+                this.voiceRecognition = new SpeechRecognition();
+                
+                this.voiceRecognition.continuous = false;
+                this.voiceRecognition.interimResults = false;
+                this.voiceRecognition.lang = 'en-US';
+
+                this.voiceRecognition.onresult = (event) => {
+                    const command = event.results[0][0].transcript.toLowerCase().trim();
+                    this.processVoiceCommand(command);
+                };
+
+                this.voiceRecognition.onerror = (event) => {
+                    console.error('Voice recognition error:', event.error);
+                    this.showToast('Voice command failed', 'error');
+                    this.stopVoiceListening();
+                };
+
+                this.voiceRecognition.onend = () => {
+                    this.stopVoiceListening();
+                };
+
+                console.log('🎤 Voice commands initialized');
+            }
+
+            /**
+             * ⌨️ Initialize keyboard shortcuts
+             */
+            initKeyboardShortcuts() {
+                if (!this.settings.keyboardShortcuts) return;
+
+                document.addEventListener('keydown', (e) => {
+                    // Ctrl/Cmd + key combinations
+                    if (e.ctrlKey || e.metaKey) {
+                        switch (e.key.toLowerCase()) {
+                            case 'l':
+                                e.preventDefault();
+                                document.getElementById('urlInput').select();
+                                break;
+                            case 'r':
+                                e.preventDefault();
+                                this.refreshBrowser();
+                                break;
+                            case 't':
+                                e.preventDefault();
+                                this.newTorCircuit();
+                                break;
+                            case ',':
+                                e.preventDefault();
+                                this.openSettings();
+                                break;
+                            case 'k':
+                                e.preventDefault();
+                                this.toggleVoiceCommands();
+                                break;
+                        }
+                    }
+
+                    // Function keys
+                    switch (e.key) {
+                        case 'F1':
+                            e.preventDefault();
+                            this.showHelp();
+                            break;
+                        case 'F5':
+                            e.preventDefault();
+                            this.refreshBrowser();
+                            break;
+                        case 'F11':
+                            e.preventDefault();
+                            this.toggleFullscreen();
+                            break;
+                        case 'Escape':
+                            if (document.getElementById('settingsModal').classList.contains('show')) {
+                                this.closeSettings();
+                            }
+                            break;
+                    }
+                });
+
+                console.log('⌨️ Keyboard shortcuts initialized');
+            }
+
+            /**
+             * 📱 Initialize Telegram Web App
+             */
+            initTelegramWebApp() {
+                if (window.Telegram && window.Telegram.WebApp) {
+                    const tg = window.Telegram.WebApp;
+                    
+                    // Configure Telegram Web App
+                    tg.ready();
+                    tg.expand();
+                    
+                    // Set header color based on theme
+                    this.updateTelegramTheme();
+                    
+                    // Handle back button
+                    tg.BackButton.onClick(() => {
+                        if (this.canGoBack()) {
+                            this.goBack();
+                        } else {
+                            tg.close();
+                        }
+                    });
+
+                    console.log('📱 Telegram Web App initialized');
+                }
+            }
+
+            /**
+             * 🎨 Switch theme
+             */
+            switchTheme(theme) {
+                this.currentTheme = theme;
+                document.documentElement.setAttribute('data-theme', theme);
+                localStorage.setItem('theme', theme);
+                
+                // Update button states
+                document.querySelectorAll('.theme-btn').forEach(btn => {
+                    btn.classList.toggle('active', btn.dataset.theme === theme);
+                });
+
+                // Update Telegram theme
+                this.updateTelegramTheme();
+                
+                this.showToast(`Switched to ${theme} theme`, 'success');
+            }
+
+            /**
+             * 📱 Update Telegram Web App theme
+             */
+            updateTelegramTheme() {
+                if (window.Telegram && window.Telegram.WebApp) {
+                    const tg = window.Telegram.WebApp;
+                    
+                    const themeColors = {
+                        light: '#007bff',
+                        dark: '#1e1e1e',
+                        cyber: '#00ff41'
+                    };
+                    
+                    tg.setHeaderColor(themeColors[this.currentTheme] || '#007bff');
+                }
+            }
+
+            /**
+             * 🌐 Navigate to URL
+             */
+            async navigateToUrl() {
+                const url = document.getElementById('urlInput').value.trim();
+                if (!url) return;
+
+                // Add protocol if missing
+                const fullUrl = url.startsWith('http') ? url : `https://${url}`;
+                
+                this.showToast('Connecting through Tor...', 'info');
+                
+                try {
+                    // Send request to backend
+                    const response = await fetch('/api/browse', {
+                        method: 'POST',
+                        headers: {
+                            'Content-Type': 'application/json',
+                            'X-Telegram-Init-Data': window.Telegram?.WebApp?.initData || ''
+                        },
+                        body: JSON.stringify({ url: fullUrl })
+                    });
+
+                    const result = await response.json();
+                    
+                    if (result.success) {
+                        // Load content in iframe
+                        document.getElementById('browserFrame').src = result.proxyUrl;
+                        this.showToast('Page loaded successfully', 'success');
+                    } else {
+                        this.showToast(result.error || 'Failed to load page', 'error');
+                    }
+                } catch (error) {
+                    this.showToast('Network error occurred', 'error');
+                    console.error('Navigation error:', error);
+                }
+            }
+
+            /**
+             * 🎤 Toggle voice commands
+             */
+            toggleVoiceCommands() {
+                if (!this.settings.voiceCommands) {
+                    this.showToast('Voice commands disabled in settings', 'warning');
+                    return;
+                }
+
+                if (this.isListening) {
+                    this.stopVoiceListening();
+                } else {
+                    this.startVoiceListening();
+                }
+            }
+
+            /**
+             * 🎙️ Start voice listening
+             */
+            startVoiceListening() {
+                if (!this.voiceRecognition) return;
+
+                this.isListening = true;
+                document.getElementById('voiceIndicator').classList.add('active');
+                
+                try {
+                    this.voiceRecognition.start();
+                    this.showToast('Listening for voice command...', 'info');
+                } catch (error) {
+                    console.error('Voice recognition error:', error);
+                    this.stopVoiceListening();
+                }
+            }
+
+            /**
+             * 🔇 Stop voice listening
+             */
+            stopVoiceListening() {
+                this.isListening = false;
+                document.getElementById('voiceIndicator').classList.remove('active');
+                
+                if (this.voiceRecognition) {
+                    this.voiceRecognition.stop();
+                }
+            }
+
+            /**
+             * 🗣️ Process voice command
+             */
+            processVoiceCommand(command) {
+                console.log('Voice command:', command);
+                
+                // Navigation commands
+                if (command.includes('go to') || command.includes('navigate to')) {
+                    const url = command.replace(/go to|navigate to/gi, '').trim();
+                    if (url) {
+                        document.getElementById('urlInput').value = url;
+                        this.navigateToUrl();
+                        this.showToast(`Navigating to ${url}`, 'success');
+                    }
+                }
+                // Theme commands
+                else if (command.includes('dark mode') || command.includes('dark theme')) {
+                    this.switchTheme('dark');
+                }
+                else if (command.includes('light mode') || command.includes('light theme')) {
+                    this.switchTheme('light');
+                }
+                else if (command.includes('cyber theme')) {
+                    this.switchTheme('cyber');
+                }
+                // Control commands
+                else if (command.includes('refresh') || command.includes('reload')) {
+                    this.refreshBrowser();
+                    this.showToast('Page refreshed', 'success');
+                }
+                else if (command.includes('new circuit') || command.includes('new tor')) {
+                    this.newTorCircuit();
+                    this.showToast('New Tor circuit established', 'success');
+                }
+                else if (command.includes('settings') || command.includes('preferences')) {
+                    this.openSettings();
+                }
+                else if (command.includes('close settings')) {
+                    this.closeSettings();
+                }
+                else {
+                    this.showToast('Command not recognized', 'warning');
+                }
+            }
+
+            /**
+             * 👆 Handle swipe gestures
+             */
+            handleSwipeLeft() {
+                // Go back
+                this.goBack();
+                this.showToast('Going back', 'info');
+            }
+
+            handleSwipeRight() {
+                // Go forward
+                this.goForward();
+                this.showToast('Going forward', 'info');
+            }
+
+            /**
+             * 🎯 Show swipe indicator
+             */
+            showSwipeIndicator(direction) {
+                const indicator = document.getElementById(`swipe${direction.charAt(0).toUpperCase() + direction.slice(1)}`);
+                indicator.classList.add('show');
+                
+                setTimeout(() => {
+                    indicator.classList.remove('show');
+                }, 1000);
+            }
+
+            /**
+             * 💬 Show gesture hint
+             */
+            showGestureHint() {
+                const hint = document.getElementById('gestureHint');
+                hint.classList.add('show');
+                
+                setTimeout(() => {
+                    hint.classList.remove('show');
+                }, 3000);
+            }
+
+            /**
+             * 🙈 Hide gesture indicators
+             */
+            hideGestureIndicators() {
+                document.querySelectorAll('.swipe-indicator').forEach(indicator => {
+                    indicator.classList.remove('show');
+                });
+            }
+
+            /**
+             * ⚙️ Open settings
+             */
+            openSettings() {
+                document.getElementById('settingsModal').classList.add('show');
+                document.body.style.overflow = 'hidden';
+            }
+
+            /**
+             * ❌ Close settings
+             */
+            closeSettings() {
+                document.getElementById('settingsModal').classList.remove('show');
+                document.body.style.overflow = '';
+            }
+
+            /**
+             * 🔄 Toggle setting
+             */
+            toggleSetting(toggle) {
+                const setting = toggle.dataset.setting;
+                const isActive = toggle.classList.contains('active');
+                
+                toggle.classList.toggle('active');
+                this.settings[setting] = !isActive;
+                
+                // Apply setting immediately
+                this.applySetting(setting, !isActive);
+                
+                // Save settings
+                this.saveSettings();
+                
+                this.showToast(`${setting} ${!isActive ? 'enabled' : 'disabled'}`, 'success');
+            }
+
+            /**
+             * 🎛️ Apply setting
+             */
+            applySetting(setting, value) {
+                switch (setting) {
+                    case 'darkMode':
+                        if (value) {
+                            this.switchTheme('dark');
+                        } else {
+                            this.switchTheme('light');
+                        }
+                        break;
+                    case 'animations':
+                        document.body.style.transition = value ? 'all 0.3s ease' : 'none';
+                        break;
+                    case 'touchGestures':
+                        if (value) {
+                            this.initGestures();
+                        }
+                        break;
+                    case 'voiceCommands':
+                        if (value) {
+                            this.initVoiceCommands();
+                        }
+                        break;
+                }
+            }
+
+            /**
+             * 💾 Load settings
+             */
+            loadSettings() {
+                const defaultSettings = {
+                    darkMode: false,
+                    animations: true,
+                    blockTrackers: true,
+                    jsProtection: true,
+                    aiFilter: true,
+                    autoMetamask: true,
+                    txWarnings: true,
+                    touchGestures: true,
+                    voiceCommands: false,
+                    keyboardShortcuts: true
+                };
+
+                const saved = localStorage.getItem('webAppSettings');
+                return saved ? { ...defaultSettings, ...JSON.parse(saved) } : defaultSettings;
+            }
+
+            /**
+             * 💾 Save settings
+             */
+            saveSettings() {
+                localStorage.setItem('webAppSettings', JSON.stringify(this.settings));
+            }
+
+            /**
+             * 🔔 Show toast notification
+             */
+            showToast(message, type = 'info') {
+                const toast = document.getElementById('toast');
+                toast.textContent = message;
+                toast.className = `toast ${type}`;
+                toast.classList.add('show');
+
+                setTimeout(() => {
+                    toast.classList.remove('show');
+                }, 3000);
+            }
+
+            /**
+             * 🔄 Refresh browser
+             */
+            refreshBrowser() {
+                const iframe = document.getElementById('browserFrame');
+                iframe.src = iframe.src;
+            }
+
+            /**
+             * 🔄 New Tor circuit
+             */
+            async newTorCircuit() {
+                try {
+                    const response = await fetch('/api/new-circuit', {
+                        method: 'POST',
+                        headers: {
+                            'X-Telegram-Init-Data': window.Telegram?.WebApp?.initData || ''
+                        }
+                    });
+
+                    const result = await response.json();
+                    
+                    if (result.success) {
+                        this.showToast('New Tor circuit established', 'success');
+                        // Update Tor status indicator
+                        this.updateStatusIndicator('tor', 'connected');
+                    } else {
+                        this.showToast('Failed to establish new circuit', 'error');
+                    }
+                } catch (error) {
+                    this.showToast('Network error', 'error');
+                }
+            }
+
+            /**
+             * ↩️ Go back
+             */
+            goBack() {
+                const iframe = document.getElementById('browserFrame');
+                iframe.contentWindow?.history.back();
+            }
+
+            /**
+             * ↪️ Go forward
+             */
+            goForward() {
+                const iframe = document.getElementById('browserFrame');
+                iframe.contentWindow?.history.forward();
+            }
+
+            /**
+             * ❓ Can go back
+             */
+            canGoBack() {
+                // In production, check browser history
+                return true;
+            }
+
+            /**
+             * 📊 Update status indicator
+             */
+            updateStatusIndicator(service, status) {
+                const indicator = document.getElementById(`${service}Status`);
+                if (indicator) {
+                    indicator.className = `status-dot ${status}`;
+                }
+            }
+
+            /**
+             * ⚡ Show quick actions
+             */
+            showQuickActions() {
+                // In production, show floating menu with quick actions
+                this.showToast('Quick actions coming soon!', 'info');
+            }
+
+            /**
+             * ❓ Show help
+             */
+            showHelp() {
+                const helpText = `
+🎯 Keyboard Shortcuts:
+• Ctrl+L: Focus URL bar
+• Ctrl+R: Refresh page
+• Ctrl+T: New Tor circuit
+• Ctrl+,: Open settings
+• Ctrl+K: Voice commands
+• F1: Show help
+• F11: Fullscreen
+
+🎮 Gestures:
+• Swipe left: Go back
+• Swipe right: Go forward
+• Long press: Context menu
+
+🎤 Voice Commands:
+• "Go to [website]"
+• "Dark/Light theme"
+• "Refresh page"
+• "New circuit"
+• "Settings"
+                `;
+                
+                this.showToast(helpText, 'info');
+            }
+
+            /**
+             * 🖥️ Toggle fullscreen
+             */
+            toggleFullscreen() {
+                if (!document.fullscreenElement) {
+                    document.documentElement.requestFullscreen();
+                    this.showToast('Entered fullscreen mode', 'success');
+                } else {
+                    document.exitFullscreen();
+                    this.showToast('Exited fullscreen mode', 'info');
+                }
+            }
+
+            /**
+             * 🎯 Handle app visibility changes
+             */
+            handleVisibilityChange() {
+                if (document.hidden) {
+                    // App is hidden - pause unnecessary operations
+                    console.log('App hidden - pausing operations');
+                } else {
+                    // App is visible - resume operations
+                    console.log('App visible - resuming operations');
+                    this.updateAllStatus();
+                }
+            }
+
+            /**
+             * 📊 Update all status indicators
+             */
+            async updateAllStatus() {
+                try {
+                    const response = await fetch('/api/status');
+                    const status = await response.json();
+                    
+                    this.updateStatusIndicator('tor', status.tor ? 'connected' : 'error');
+                    this.updateStatusIndicator('web3', status.web3 ? 'connected' : 'error');
+                    this.updateStatusIndicator('security', status.security ? 'connected' : 'warning');
+                } catch (error) {
+                    console.error('Failed to update status:', error);
+                }
+            }
+        }
+
+        // 🚀 Initialize the enhanced web app
+        document.addEventListener('DOMContentLoaded', () => {
+            window.webApp = new EnhancedWebApp();
+            
+            // Handle visibility changes
+            document.addEventListener('visibilitychange', () => {
+                window.webApp.handleVisibilityChange();
+            });
+            
+            // Prevent zoom on mobile
+            document.addEventListener('touchmove', (e) => {
+                if (e.touches.length > 1) {
+                    e.preventDefault();
+                }
+            }, { passive: false });
+            
+            // Handle orientation changes
+            window.addEventListener('orientationchange', () => {
+                setTimeout(() => {
+                    window.webApp.updateTelegramTheme();
+                }, 500);
+            });
+        });
+
+        // 🎯 Telegram Web App script
+        if (window.Telegram) {
+            window.Telegram.WebApp.ready();
+        }
+    </script>
+
+    <!-- 📱 Telegram Web App script -->
+    <script src="https://telegram.org/js/telegram-web-app.js"></script>
+</body>
+</html>

@@ -1,0 +1,308 @@
+version: '3.8'
+
+# 🛠️ Development Docker Compose Configuration
+# Web3 Tor Browser - Development Environment
+
+services:
+  # 🌐 Main application (Development)
+  web3-tor-browser-dev:
+    build:
+      context: .
+      dockerfile: ./docker/Dockerfile.dev
+      args:
+        - NODE_ENV=development
+    image: reliablesecurity/web3-tor-browser:dev
+    container_name: web3-tor-browser-dev
+    restart: unless-stopped
+    ports:
+      - "3000:3000"
+      - "5900:5900"  # VNC port
+      - "9229:9229"  # Node.js debug port
+    environment:
+      - NODE_ENV=development
+      - PORT=3000
+      - DEBUG=*
+      - CHOKIDAR_USEPOLLING=true  # For file watching in Docker
+      - TELEGRAM_BOT_TOKEN=${TELEGRAM_BOT_TOKEN:-dev-token}
+      - ENCRYPTION_KEY=${ENCRYPTION_KEY:-dev-key-32-characters-long123}
+      - JWT_SECRET=${JWT_SECRET:-dev-jwt-secret}
+      - TOR_PROXY_URL=socks5://tor-proxy-dev:9050
+      - REDIS_URL=redis://redis-dev:6379
+      - MONGODB_URL=mongodb://mongodb-dev:27017/web3tordb_dev
+      - SESSION_TIMEOUT=86400000  # 24 hours for dev
+      - MAX_SESSIONS=10
+      - ENABLE_MONITORING=true
+      - ENABLE_ANALYTICS=false  # Disabled in dev
+      - ENABLE_AI_FEATURES=true
+      - ENABLE_PREMIUM_FEATURES=true
+      - LOG_LEVEL=debug
+    volumes:
+      - ./src:/app/src:cached
+      - ./public:/app/public:cached
+      - ./tests:/app/tests:cached
+      - ./package.json:/app/package.json:cached
+      - ./package-lock.json:/app/package-lock.json:cached
+      - ./logs:/app/logs
+      - ./data:/app/data
+      - browser-profiles-dev:/app/profiles
+      - node_modules:/app/node_modules
+    depends_on:
+      - redis-dev
+      - mongodb-dev
+      - tor-proxy-dev
+    networks:
+      - web3-tor-dev-network
+    command: npm run dev
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:3000/health"]
+      interval: 60s
+      timeout: 15s
+      retries: 3
+      start_period: 60s
+
+  # 🧅 Tor Proxy Service (Development)
+  tor-proxy-dev:
+    build:
+      context: ./docker
+      dockerfile: Dockerfile.tor
+      args:
+        - TOR_ENV=development
+    image: reliablesecurity/tor-proxy:dev
+    container_name: tor-proxy-dev
+    restart: unless-stopped
+    ports:
+      - "9050:9050"  # SOCKS5 proxy
+      - "9051:9051"  # Control port
+    environment:
+      - TOR_CONTROL_PASSWORD=devpassword
+      - TOR_CIRCUITS=5  # Fewer circuits for dev
+      - TOR_ENFORCE_DISTINCT_SUBNETS=0  # More permissive for dev
+      - TOR_MAX_CIRCUIT_DIRTINESS=600  # Longer for dev
+      - TOR_LOG_LEVEL=notice  # More verbose logging
+    volumes:
+      - tor-data-dev:/var/lib/tor
+      - ./docker/config/torrc.dev:/etc/tor/torrc:ro
+    networks:
+      - web3-tor-dev-network
+    healthcheck:
+      test: ["CMD", "curl", "--socks5-hostname", "localhost:9050", "http://check.torproject.org"]
+      interval: 120s
+      timeout: 60s
+      retries: 3
+
+  # 📊 Redis Cache (Development)
+  redis-dev:
+    image: redis:7-alpine
+    container_name: redis-dev
+    restart: unless-stopped
+    ports:
+      - "6380:6379"  # Different port for dev
+    command: redis-server --appendonly yes --maxmemory 256mb --maxmemory-policy allkeys-lru --loglevel debug
+    volumes:
+      - redis-data-dev:/data
+    networks:
+      - web3-tor-dev-network
+    healthcheck:
+      test: ["CMD", "redis-cli", "ping"]
+      interval: 60s
+      timeout: 10s
+      retries: 3
+
+  # 🗄️ MongoDB Database (Development)
+  mongodb-dev:
+    image: mongo:7
+    container_name: mongodb-dev
+    restart: unless-stopped
+    ports:
+      - "27018:27017"  # Different port for dev
+    environment:
+      - MONGO_INITDB_ROOT_USERNAME=devadmin
+      - MONGO_INITDB_ROOT_PASSWORD=devpassword
+      - MONGO_INITDB_DATABASE=web3tordb_dev
+    volumes:
+      - mongodb-data-dev:/data/db
+      - ./docker/config/mongo-init-dev.js:/docker-entrypoint-initdb.d/mongo-init.js:ro
+    networks:
+      - web3-tor-dev-network
+    healthcheck:
+      test: ["CMD", "mongosh", "--eval", "db.adminCommand('ping')"]
+      interval: 60s
+      timeout: 10s
+      retries: 3
+
+  # 🔧 MongoDB Express (Database Admin UI)
+  mongo-express:
+    image: mongo-express:latest
+    container_name: mongo-express-dev
+    restart: unless-stopped
+    ports:
+      - "8081:8081"
+    environment:
+      - ME_CONFIG_MONGODB_ADMINUSERNAME=devadmin
+      - ME_CONFIG_MONGODB_ADMINPASSWORD=devpassword
+      - ME_CONFIG_MONGODB_URL=mongodb://devadmin:devpassword@mongodb-dev:27017/
+      - ME_CONFIG_BASICAUTH_USERNAME=dev
+      - ME_CONFIG_BASICAUTH_PASSWORD=dev123
+    depends_on:
+      - mongodb-dev
+    networks:
+      - web3-tor-dev-network
+
+  # 🔍 Redis Commander (Redis Admin UI)
+  redis-commander:
+    image: rediscommander/redis-commander:latest
+    container_name: redis-commander-dev
+    restart: unless-stopped
+    ports:
+      - "8082:8081"
+    environment:
+      - REDIS_HOSTS=local:redis-dev:6379
+    depends_on:
+      - redis-dev
+    networks:
+      - web3-tor-dev-network
+
+  # 📊 Simple Prometheus for Dev
+  prometheus-dev:
+    image: prom/prometheus:latest
+    container_name: prometheus-dev
+    restart: unless-stopped
+    ports:
+      - "9091:9090"  # Different port for dev
+    command:
+      - '--config.file=/etc/prometheus/prometheus.yml'
+      - '--storage.tsdb.path=/prometheus'
+      - '--web.enable-lifecycle'
+      - '--log.level=debug'
+    volumes:
+      - ./docker/config/prometheus-dev.yml:/etc/prometheus/prometheus.yml:ro
+      - prometheus-data-dev:/prometheus
+    networks:
+      - web3-tor-dev-network
+
+  # 📈 Grafana Dashboard (Development)
+  grafana-dev:
+    image: grafana/grafana:latest
+    container_name: grafana-dev
+    restart: unless-stopped
+    ports:
+      - "3002:3000"  # Different port for dev
+    environment:
+      - GF_SECURITY_ADMIN_USER=dev
+      - GF_SECURITY_ADMIN_PASSWORD=dev123
+      - GF_INSTALL_PLUGINS=grafana-piechart-panel
+      - GF_LOG_LEVEL=debug
+    volumes:
+      - grafana-data-dev:/var/lib/grafana
+      - ./docker/config/grafana-dev:/etc/grafana/provisioning:ro
+    networks:
+      - web3-tor-dev-network
+    depends_on:
+      - prometheus-dev
+
+  # 🧪 Test Runner
+  test-runner:
+    build:
+      context: .
+      dockerfile: ./docker/Dockerfile.test
+    image: reliablesecurity/web3-tor-browser:test
+    container_name: test-runner
+    volumes:
+      - ./src:/app/src:cached
+      - ./tests:/app/tests:cached
+      - ./coverage:/app/coverage
+      - ./package.json:/app/package.json:cached
+      - ./jest.config.js:/app/jest.config.js:cached
+      - node_modules:/app/node_modules
+    environment:
+      - NODE_ENV=test
+      - CI=true
+    networks:
+      - web3-tor-dev-network
+    profiles:
+      - testing
+    command: npm run test:watch
+
+  # 📝 Documentation Server
+  docs-server:
+    image: nginx:alpine
+    container_name: docs-server
+    restart: unless-stopped
+    ports:
+      - "8080:80"
+    volumes:
+      - ./docs:/usr/share/nginx/html:ro
+      - ./docker/config/nginx-docs.conf:/etc/nginx/conf.d/default.conf:ro
+    networks:
+      - web3-tor-dev-network
+    profiles:
+      - docs
+
+  # 🌐 Mailcatcher (Email Testing)
+  mailcatcher:
+    image: sj26/mailcatcher:latest
+    container_name: mailcatcher-dev
+    restart: unless-stopped
+    ports:
+      - "1080:1080"  # Web interface
+      - "1025:1025"  # SMTP port
+    networks:
+      - web3-tor-dev-network
+    profiles:
+      - email-testing
+
+  # 🔧 Webpack Dev Server (Hot Reload)
+  webpack-dev:
+    build:
+      context: .
+      dockerfile: ./docker/Dockerfile.webpack
+    image: reliablesecurity/webpack-dev:latest
+    container_name: webpack-dev
+    ports:
+      - "8083:8080"
+    volumes:
+      - ./src:/app/src:cached
+      - ./public:/app/public:cached
+      - ./webpack.config.js:/app/webpack.config.js:cached
+      - ./package.json:/app/package.json:cached
+      - node_modules:/app/node_modules
+    environment:
+      - NODE_ENV=development
+      - WEBPACK_DEV_SERVER=true
+    networks:
+      - web3-tor-dev-network
+    profiles:
+      - frontend-dev
+    command: npm run webpack:dev
+
+# 🌐 Networks
+networks:
+  web3-tor-dev-network:
+    driver: bridge
+    ipam:
+      config:
+        - subnet: 172.21.0.0/16
+
+# 💾 Volumes
+volumes:
+  browser-profiles-dev:
+    driver: local
+  tor-data-dev:
+    driver: local
+  redis-data-dev:
+    driver: local
+  mongodb-data-dev:
+    driver: local
+  prometheus-data-dev:
+    driver: local
+  grafana-data-dev:
+    driver: local
+  node_modules:
+    driver: local
+
+# 🏷️ Labels for development
+x-labels: &dev-labels
+  maintainer: "ReliableSecurity"
+  project: "web3-tor-browser"
+  environment: "development"
+  version: "2.0.0-dev"
