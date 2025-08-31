@@ -34,7 +34,11 @@ jobs:
         
     - name: 📥 Install dependencies
       run: |
-        npm ci
+        if [ -f package-lock.json ]; then
+          npm ci
+        else
+          npm install
+        fi
         npm install --save-dev jest supertest playwright
         
     - name: 🔍 Lint code
