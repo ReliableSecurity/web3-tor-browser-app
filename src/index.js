@@ -7,8 +7,13 @@ const path = require('path');
 
 const TelegramBot = require('./telegramBot');
 const Web3Service = require('./web3Service');
+const EnhancedWeb3Service = require('./enhancedWeb3Service');
 const WebAppManager = require('./webAppManager');
 const SessionManager = require('./sessionManager');
+const SecurityManager = require('./securityManager');
+const MonitoringManager = require('./monitoringManager');
+const PremiumManager = require('./premiumManager');
+const AIManager = require('./aiManager');
 
 class App {
     constructor() {

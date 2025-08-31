@@ -1,12 +1,122 @@
 const puppeteer = require('puppeteer');
 const path = require('path');
 const fs = require('fs').promises;
+const TorManager = require('./torManager');
+const EventEmitter = require('events');
 
-class WebAppManager {
+class WebAppManager extends EventEmitter {
     constructor() {
+        super();
         this.sessions = new Map();
-        this.proxyPort = 9050; // Tor SOCKS proxy порт
+        this.torManager = new TorManager();
+        this.isInitialized = false;
+        this.browserLaunchQueue = [];
+        this.maxConcurrentSessions = parseInt(process.env.MAX_SESSIONS) || 10;
+        
         console.log('🌐 Web App Manager инициализирован');
+        this.initialize();
+    }
+
+    // Инициализация TorManager и настройка обработчиков
+    async initialize() {
+        try {
+            console.log('🔄 Инициализация WebApp Manager...');
+
+            // Инициализируем Tor Manager
+            await this.torManager.initialize();
+            
+            // Настраиваем обработчики событий Tor
+            this.setupTorEventHandlers();
+            
+            // Настраиваем мониторинг сессий
+            this.setupSessionMonitoring();
+            
+            this.isInitialized = true;
+            console.log('✅ WebApp Manager готов к работе');
+            this.emit('ready');
+            
+        } catch (error) {
+            console.error('❌ Ошибка инициализации WebApp Manager:', error);
+            this.emit('error', error);
+            throw error;
+        }
+    }
+
+    // Настройка обработчиков событий Tor
+    setupTorEventHandlers() {
+        this.torManager.on('ready', () => {
+            console.log('✅ Tor готов, можно запускать браузеры');
+        });
+        
+        this.torManager.on('connected', (data) => {
+            console.log(`🌐 Tor подключен, IP: ${data.IP}`);
+        });
+        
+        this.torManager.on('healthIssue', (error) => {
+            console.error('⚠️ Проблема с Tor:', error.message);
+            this.emit('torHealthIssue', error);
+        });
+        
+        this.torManager.on('newIdentity', (data) => {
+            console.log(`🔄 Новая Tor цепочка, IP: ${data.IP}`);
+            this.emit('newTorIdentity', data);
+        });
+        
+        this.torManager.on('failed', () => {
+            console.error('❌ Критическая ошибка Tor сервиса');
+            this.emit('torFailed');
+        });
+    }
+
+    // Настройка мониторинга сессий
+    setupSessionMonitoring() {
+        // Проверка каждые 60 секунд
+        setInterval(async () => {
+            await this.monitorSessions();
+        }, 60000);
+        
+        console.log('📊 Мониторинг сессий настроен');
+    }
+
+    // Мониторинг активных сессий
+    async monitorSessions() {
+        const stats = {
+            total: this.sessions.size,
+            healthy: 0,
+            unhealthy: 0,
+            inactive: 0
+        };
+        
+        const now = new Date();
+        const inactivityThreshold = 30 * 60 * 1000; // 30 минут
+        
+        for (const [sessionId, session] of this.sessions.entries()) {
+            try {
+                // Проверка активности сессии
+                if (now - session.lastActivity > inactivityThreshold) {
+                    stats.inactive++;
+                    console.log(`⚠️ Неактивная сессия обнаружена: ${sessionId}`);
+                    await this.stopSession(sessionId);
+                    continue;
+                }
+                
+                // Проверка здоровья браузера
+                if (session.browser && !session.browser.isConnected()) {
+                    stats.unhealthy++;
+                    console.log(`❌ Нездоровая сессия обнаружена: ${sessionId}`);
+                    await this.stopSession(sessionId);
+                    continue;
+                }
+                
+                stats.healthy++;
+                
+            } catch (error) {
+                console.error(`❌ Ошибка мониторинга сессии ${sessionId}:`, error);
+                stats.unhealthy++;
+            }
+        }
+        
+        this.emit('sessionStats', stats);
     }
 
     // Запуск браузерной сессии для Telegram Web App
@@ -22,8 +132,15 @@ class WebAppManager {
             const deviceType = options.userAgent || 'desktop';
             const viewport = this.getViewportSettings(deviceType);
 
-            // Запускаем Tor прокси
-            await this.startTorProxy();
+            // Ждем готовности Tor если еще не инициализирован
+            if (!this.isInitialized) {
+                await new Promise((resolve) => {
+                    this.once('ready', resolve);
+                });
+            }
+
+            // Получаем конфигурацию прокси от TorManager
+            const proxyConfig = this.torManager.getProxyConfig();
 
             // Конфигурация браузера с Tor прокси
             const browserConfig = {
@@ -35,7 +152,7 @@ class WebAppManager {
                     '--disable-accelerated-2d-canvas',
                     '--disable-gpu',
                     '--window-size=1920,1080',
-                    `--proxy-server=socks5://127.0.0.1:${this.proxyPort}`,
+                    `--proxy-server=${proxyConfig.url}`,
                     '--disable-web-security',
                     '--disable-features=VizDisplayCompositor',
                     '--disable-background-networking',
@@ -387,24 +504,31 @@ class WebAppManager {
         }
     }
 
-    // Запуск Tor прокси
-    async startTorProxy() {
-        return new Promise((resolve, reject) => {
-            const { spawn } = require('child_process');
-            
-            // Простая проверка - запущен ли уже Tor
-            const torProcess = spawn('tor', ['--SOCKSPort', this.proxyPort.toString()], {
-                detached: true,
-                stdio: 'ignore'
-            });
+    // Получение новой Tor личности (нового IP)
+    async getNewTorIdentity() {
+        try {
+            const identityInfo = await this.torManager.newIdentity();
+            console.log(`🔄 Новая Tor личность получена: IP ${identityInfo.IP}`);
+            return identityInfo;
+        } catch (error) {
+            console.error('❌ Ошибка получения новой Tor личности:', error);
+            throw error;
+        }
+    }
 
-            torProcess.unref();
-            
-            setTimeout(() => {
-                console.log(`✅ Tor прокси запущен на порту ${this.proxyPort}`);
-                resolve();
-            }, 3000);
-        });
+    // Получение статуса Tor соединения
+    getTorStatus() {
+        return this.torManager.getStatus();
+    }
+
+    // Проверка здоровья Tor
+    async checkTorHealth() {
+        try {
+            return await this.torManager.healthCheck();
+        } catch (error) {
+            console.error('❌ Проблема с Tor здоровьем:', error);
+            return false;
+        }
     }
 
     // Проверка разрешенных URL

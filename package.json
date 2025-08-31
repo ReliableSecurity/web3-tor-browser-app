@@ -8,7 +8,21 @@
     "dev": "nodemon src/index.js",
     "docker:build": "docker-compose build",
     "docker:up": "docker-compose up -d",
-    "docker:down": "docker-compose down"
+    "docker:down": "docker-compose down",
+    "test": "node scripts/test-runner.js unit",
+    "test:unit": "node scripts/test-runner.js unit",
+    "test:load": "node scripts/test-runner.js load",
+    "test:e2e": "node scripts/test-runner.js e2e",
+    "test:security": "node scripts/test-runner.js security",
+    "test:all": "node scripts/test-runner.js all",
+    "test:watch": "node scripts/test-runner.js unit --watch",
+    "test:coverage": "node scripts/test-runner.js unit --verbose",
+    "test:ci": "node scripts/test-runner.js all --bail",
+    "test:integration": "node test-server.js",
+    "test:multi-user": "node test-multi-users.js",
+    "lint": "eslint src/ tests/",
+    "lint:fix": "eslint src/ tests/ --fix",
+    "pretest": "npm run lint:fix"
   },
   "keywords": ["web3", "tor", "telegram", "vps", "browser", "proxy"],
   "author": "Web3 Developer",
@@ -26,6 +40,24 @@
     "axios": "^1.5.1"
   },
   "devDependencies": {
-    "nodemon": "^3.0.1"
+    "nodemon": "^3.0.1",
+    "@jest/globals": "^29.7.0",
+    "jest": "^29.7.0",
+    "jest-environment-node": "^29.7.0",
+    "jest-junit": "^16.0.0",
+    "jest-html-reporters": "^3.1.5",
+    "jest-sonar-reporter": "^2.0.0",
+    "babel-jest": "^29.7.0",
+    "@babel/core": "^7.23.2",
+    "@babel/preset-env": "^7.23.2",
+    "eslint": "^8.52.0",
+    "eslint-config-standard": "^17.1.0",
+    "eslint-plugin-import": "^2.29.0",
+    "eslint-plugin-n": "^16.2.0",
+    "eslint-plugin-promise": "^6.1.1",
+    "eslint-plugin-jest": "^27.6.0",
+    "supertest": "^6.3.3",
+    "nock": "^13.3.8",
+    "socks-proxy-agent": "^8.0.2"
   }
 }

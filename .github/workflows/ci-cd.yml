@@ -20,7 +20,7 @@ jobs:
     runs-on: ubuntu-latest
     strategy:
       matrix:
-        node-version: [16.x, 18.x, 20.x]
+        node-version: [18.x, 20.x]
     
     steps:
     - name: 📦 Checkout code
@@ -271,7 +271,7 @@ jobs:
         git diff --name-only $(git describe --tags --abbrev=0 HEAD^)..HEAD | sed 's/^/- /' >> CHANGELOG.md
         
     - name: 📤 Upload release notes
-      uses: actions/upload-artifact@v3
+      uses: actions/upload-artifact@v4
       with:
         name: release-notes
         path: CHANGELOG.md

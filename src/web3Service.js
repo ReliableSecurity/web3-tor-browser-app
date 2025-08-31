@@ -1,5 +1,5 @@
 const { ethers } = require('ethers');
-const Web3 = require('web3');
+const { Web3 } = require('web3');
 
 class Web3Service {
     constructor() {
